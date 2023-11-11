@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
+import plotly.express as px
 import seaborn as sns
 
 from datetime import datetime
@@ -181,14 +182,15 @@ def visualisasi_produk():
 # -------------------------------------------------------------------- #
 
 def visualisasi_perilaku():
-    # Konversi kolom order_purchase_timestamp ke format datetime
+    orders_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_orders_dataset.csv')
+    # Convert order_purchase_timestamp to datetime
     orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
 
-    # Gabungkan data pesanan dan pembayaran
+    # Merge order and payment data
     order_payment_data = order_payments_data.groupby('order_id')['payment_value'].sum().reset_index()
     orders_data = orders_data.merge(order_payment_data, on='order_id', how='left')
 
-    # Hitung Recency, Frequency, dan Monetary
+    # Calculate Recency, Frequency, and Monetary
     snapshot_date = orders_data['order_purchase_timestamp'].max() + pd.DateOffset(days=1)
     rfm_data = orders_data.groupby('customer_id').agg({
         'order_purchase_timestamp': lambda x: (snapshot_date - x.max()).days,
@@ -196,23 +198,58 @@ def visualisasi_perilaku():
         'payment_value': 'sum'
     }).reset_index()
 
-    # Ubah nama kolom
+    # Rename columns
     rfm_data.rename(columns={
         'order_purchase_timestamp': 'Recency',
         'order_id': 'Frequency',
         'payment_value': 'Monetary'
     }, inplace=True)
 
-    # Hitung RFM Score
+    # Calculate RFM Score
+    # rfm_data['Recency_Score'] = pd.qcut(rfm_data['Recency'], q=4, labels=[4, 3, 2, 1])
+    # rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, duplicates='drop')
+    # rfm_data['Monetary_Score'] = pd.qcut(rfm_data['Monetary'], q=4, labels=[1, 2, 3, 4])
+    
     rfm_data['Recency_Score'] = pd.qcut(rfm_data['Recency'], q=4, labels=[4, 3, 2, 1])
-    rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, labels=[1, 2, 3, 4])
+    rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, duplicates='drop')
     rfm_data['Monetary_Score'] = pd.qcut(rfm_data['Monetary'], q=4, labels=[1, 2, 3, 4])
 
-    # Tampilkan hasil RFM
-    print(rfm_data.head())
+    # Create a Streamlit app
+    st.title('RFM Analysis - E-commerce')
 
-    # Visualisasi data RFM
-    st.title('RFM Analysis Dashboard')
+    # Display the RFM data
+    st.write('RFM Data:')
+    st.write(rfm_data.head())
+
+    # Create separate bar plots for Recency, Frequency, and Monetary
+    fig, axes = plt.subplots(3, 1, figsize=(10, 18))
+
+    # Recency Plot
+    rfm_data['Recency_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[0])
+    axes[0].set_title('Recency Analysis')
+    axes[0].set_xlabel('Recency Score')
+    axes[0].set_ylabel('Count')
+
+    # Frequency Plot
+    if '1' in rfm_data['Frequency_Score'].cat.categories and '2' in rfm_data['Frequency_Score'].cat.categories \
+            and '3' in rfm_data['Frequency_Score'].cat.categories and '4' in rfm_data['Frequency_Score'].cat.categories:
+        rfm_data['Frequency_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[1])
+        axes[1].set_title('Frequency Analysis')
+        axes[1].set_xlabel('Frequency Score')
+        axes[1].set_ylabel('Count')
+
+    # Monetary Plot
+    rfm_data['Monetary_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[2])
+    axes[2].set_title('Monetary Analysis')
+    axes[2].set_xlabel('Monetary Score')
+    axes[2].set_ylabel('Count')
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Display the plots using Streamlit
+    st.pyplot(fig)
+
 
 # menjalankan fungsi visualisasi
 st.title('Brazilian E-Commerce Public Dataset Visualization')
