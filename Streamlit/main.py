@@ -94,8 +94,8 @@ ax.axhline(y=overall_mean, color='r', linestyle='--', label=f'Rata-rata Keseluru
 
 plt.xticks(rotation=0)
 plt.show()
-
-print('Rata-rata keseluruhan: {:.2f}'.format(overall_mean))
+st.pyplot(plt)
+st.text('Rata-rata keseluruhan: {:.2f}'.format(overall_mean))
 
 
 # Konversi kolom order_purchase_timestamp ke format datetime
