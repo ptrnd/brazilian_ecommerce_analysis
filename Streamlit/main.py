@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 # Baca data pelanggan, pesanan, dan pembayaran
-customer_data = pd.read_csv('./../Datasets/olist_customers_dataset.csv')
+customer_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_customers_dataset.csv')
 geo_data = pd.read_csv('./../Datasets/olist_geolocation_dataset.csv')
 order_items_data = pd.read_csv('./../Datasets/olist_order_items_dataset.csv')
 order_payments_data = pd.read_csv('../Datasets/olist_order_payments_dataset.csv')
