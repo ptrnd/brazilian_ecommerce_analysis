@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Baca data pelanggan, pesanan, dan pembayaran
-customer_data = pd.read_csv('../Datasets/olist_customers_dataset.csv')
-geo_data = pd.read_csv('../Datasets/olist_geolocation_dataset.csv')
-order_items_data = pd.read_csv('../Datasets/olist_order_items_dataset.csv')
+customer_data = pd.read_csv('./../Datasets/olist_customers_dataset.csv')
+geo_data = pd.read_csv('./../Datasets/olist_geolocation_dataset.csv')
+order_items_data = pd.read_csv('./../Datasets/olist_order_items_dataset.csv')
 order_payments_data = pd.read_csv('../Datasets/olist_order_payments_dataset.csv')
 order_reviews_data = pd.read_csv('../Datasets/olist_order_reviews_dataset.csv')
 orders_data = pd.read_csv('../Datasets/olist_orders_dataset.csv')
