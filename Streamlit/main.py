@@ -2,7 +2,12 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+from datetime import datetime
 from pathlib import Path
+from matplotlib.ticker import FuncFormatter
+import calendar
 
 # Baca data pelanggan, pesanan, dan pembayaran
 customer_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_customers_dataset.csv')
