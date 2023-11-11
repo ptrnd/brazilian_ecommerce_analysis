@@ -61,14 +61,12 @@ orders_data['order_delivered_carrier_date'] = pd.to_datetime(orders_data['order_
 orders_data['order_delivered_customer_date'] = pd.to_datetime(orders_data['order_delivered_customer_date'])
 orders_data['order_estimated_delivery_date'] = pd.to_datetime(orders_data['order_estimated_delivery_date'])
 
-# visualisasi
-st.title('Brazilian E-Commerce Public Dataset Visualization')
-
 # ---------------------------------------------------------------------- #
 # -------------------- Visualisasi Review pelanggan -------------------- #
 # ---------------------------------------------------------------------- #
 
 def visualisasi_review():
+    st.subheader('Rata-rata Review Pelanggan Secara Keseluruhan')
     # Bagian kode yang Anda miliki
     order_reviews_data['review_month'] = order_reviews_data['review_answer_timestamp'].dt.month
     order_reviews_data['review_year'] = order_reviews_data['review_answer_timestamp'].dt.year
@@ -108,7 +106,76 @@ def visualisasi_review():
     # Menampilkan rata-rata keseluruhan
     st.write(f'Rata-rata keseluruhan: {overall_mean:.2f}')
 
-# ...
+# ------------------------------------------------------------------------------- #
+# -------------------- Visualisasi Jumlah Pelanggan per Kota -------------------- #
+# ------------------------------------------------------------------------------- #
+
+def visualisasi_kota():
+    st.subheader('Jumlah Pelanggan per Kota (Top 20 Cities)')
+    # Group dan hitung jumlah pelanggan unik per kota
+    top_20_cities = customer_data.groupby('customer_city')['customer_id'].nunique().sort_values(ascending=False).head(20)
+
+    # Set up the appearance of the plot
+    plt.figure(figsize=(20, 8))
+    sns.set(style="whitegrid")
+
+    # Create a bar plot
+    ax = sns.barplot(x=top_20_cities.values, y=top_20_cities.index, palette="mako")
+
+    # Add labels and title
+    plt.xlabel('Jumlah Pelanggan')
+    plt.ylabel('Kota Pelanggan')
+    plt.title('Jumlah Pelanggan per Kota (Top 20 Cities)')
+
+    # Adjust the rotation of city labels for better readability
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right')
+    
+    # Add values next to the bars
+    for i, v in enumerate(top_20_cities.values):
+        ax.text(v + 3, i + .25, str(round(v, 3)), color='black')
+
+    # Adjust x-axis values to thousands format
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: '{:,.0f}'.format(x * 1)))
+
+    # Show the plot using Streamlit
+    st.pyplot(plt)
+
+# ------------------------------------------------------------ #
+# -------------------- Visualisasi produk -------------------- #
+# ------------------------------------------------------------ #
+
+def visualisasi_produk():
+    
+    # menghitung jumlah pembayaran produk terbanyak
+    order_product = pd.merge(orders_data, order_items_data, on='order_id')
+    order_product = pd.merge(order_product, order_payments_data, on='order_id')
+    order_product = pd.merge(order_product, products_data, on='product_id')
+    order_product = pd.merge(order_product, product_category_data, on='product_category_name')
+
+    order_product.groupby('product_category_name_english')['payment_value'].sum().sort_values(ascending=False).head(10)
+    
+    # Group dan hitung total payment value per kategori produk
+    category_payment_sum = order_product.groupby('product_category_name_english')['payment_value'].sum().sort_values(ascending=False)
+
+    # Menyesuaikan tampilan plot
+    plt.figure(figsize=(30, 20))
+    sns.set(style="whitegrid")
+    ax = sns.barplot(x=category_payment_sum.values, y=category_payment_sum.index, palette="viridis")
+
+    # menambahkan label dan judul
+    plt.xlabel('Total Payment Value')
+    plt.ylabel('Product Category')
+    plt.title('Total Payment Value by Product Category (Top Categories)')
+
+    # Add values next to the bars
+    for i, v in enumerate(category_payment_sum.values):
+        ax.text(v + 3, i + .25, str(round(v, 3)), color='black', fontweight='bold')
+
+    # Adjust x-axis values to thousands format
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: '{:,.0f}'.format(x * 1)))
+
+    # Show the plot using Streamlit
+    st.pyplot(plt)
 
 # -------------------------------------------------------------------- #
 # -------------------- Visualisasi data pelanggan -------------------- #
@@ -123,7 +190,7 @@ def visualisasi_perilaku():
     orders_data = orders_data.merge(order_payment_data, on='order_id', how='left')
 
     # Hitung Recency, Frequency, dan Monetary
-    snapshot_date = orders_data['order_purchase_timestamp'].max() + pd.to_timedelta('1 day')  # Menggunakan pd.to_timedelta
+    snapshot_date = orders_data['order_purchase_timestamp'].max() + pd.DateOffset(days=1, normalize=True)
     rfm_data = orders_data.groupby('customer_id').agg({
         'order_purchase_timestamp': lambda x: (snapshot_date - pd.to_datetime(x.max())).dt.days,
         'order_id': 'nunique',
@@ -168,5 +235,8 @@ def visualisasi_perilaku():
     col3.pyplot(plt)
 
 # menjalankan fungsi visualisasi
+st.title('Brazilian E-Commerce Public Dataset Visualization')
 visualisasi_review()
+visualisasi_kota()
+visualisasi_produk()
 visualisasi_perilaku()
