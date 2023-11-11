@@ -15,7 +15,7 @@ import os
 os.chdir(Path(__file__).parents[1])
 
 customer_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_customers_dataset.csv')
-geo_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_geolocation_dataset.csv')
+# geo_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_geolocation_dataset.csv')
 order_items_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_order_items_dataset.csv')
 order_payments_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_order_payments_dataset.csv')
 order_reviews_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_order_reviews_dataset.csv')
@@ -66,7 +66,6 @@ orders_data['order_estimated_delivery_date'] = pd.to_datetime(orders_data['order
 # ---------------------------------------------------------------------- #
 
 def visualisasi_review():
-    st.subheader('Rata-rata Review Pelanggan Secara Keseluruhan')
     # Bagian kode yang Anda miliki
     order_reviews_data['review_month'] = order_reviews_data['review_answer_timestamp'].dt.month
     order_reviews_data['review_year'] = order_reviews_data['review_answer_timestamp'].dt.year
@@ -90,7 +89,7 @@ def visualisasi_review():
     overall_mean = monthly_mean.mean()
 
     # Visualisasi menggunakan Streamlit
-    st.title('Rata-rata Review Pelanggan Secara Keseluruhan')
+    st.subheader('Rata-rata Review Pelanggan Secara Keseluruhan')
     # Plotting sebagai grafik garis
     fig, ax = plt.subplots(figsize=(10, 5))
     monthly_mean.plot(kind='line', marker='o', linestyle='-', ax=ax)
@@ -182,17 +181,17 @@ def visualisasi_produk():
 # -------------------------------------------------------------------- #
 
 def visualisasi_perilaku():
-    # Membaca data pesanan kembali di dalam fungsi
-    orders_data = pd.read_csv(Path(__file__).parents[1] / 'Datasets/olist_orders_dataset.csv')
+    # Konversi kolom order_purchase_timestamp ke format datetime
+    orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
 
     # Gabungkan data pesanan dan pembayaran
     order_payment_data = order_payments_data.groupby('order_id')['payment_value'].sum().reset_index()
     orders_data = orders_data.merge(order_payment_data, on='order_id', how='left')
 
     # Hitung Recency, Frequency, dan Monetary
-    snapshot_date = orders_data['order_purchase_timestamp'].max() + pd.DateOffset(days=1, normalize=True)
+    snapshot_date = orders_data['order_purchase_timestamp'].max() + pd.DateOffset(days=1)
     rfm_data = orders_data.groupby('customer_id').agg({
-        'order_purchase_timestamp': lambda x: (snapshot_date - pd.to_datetime(x.max())).dt.days,
+        'order_purchase_timestamp': lambda x: (snapshot_date - x.max()).days,
         'order_id': 'nunique',
         'payment_value': 'sum'
     }).reset_index()
@@ -204,35 +203,16 @@ def visualisasi_perilaku():
         'payment_value': 'Monetary'
     }, inplace=True)
 
+    # Hitung RFM Score
+    rfm_data['Recency_Score'] = pd.qcut(rfm_data['Recency'], q=4, labels=[4, 3, 2, 1])
+    rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, labels=[1, 2, 3, 4])
+    rfm_data['Monetary_Score'] = pd.qcut(rfm_data['Monetary'], q=4, labels=[1, 2, 3, 4])
+
+    # Tampilkan hasil RFM
+    print(rfm_data.head())
+
     # Visualisasi data RFM
     st.title('RFM Analysis Dashboard')
-
-    # Menggunakan st.beta_columns untuk menyusun visualisasi
-    col1, col2, col3 = st.columns(3)
-
-    # Visualisasi Recency
-    col1.subheader('Distribution of Recency')
-    plt.hist(rfm_data['Recency'], bins=30, color='skyblue', edgecolor='black')
-    plt.xlabel('Recency (days)')
-    plt.ylabel('Count')
-    plt.xticks(rotation=45)  # Menambahkan rotasi pada label x
-    col1.pyplot(plt)
-
-    # Visualisasi Frequency
-    col2.subheader('Distribution of Frequency')
-    plt.hist(rfm_data['Frequency'], bins=30, color='lightcoral', edgecolor='black')
-    plt.xlabel('Frequency (number of orders)')
-    plt.ylabel('Count')
-    plt.xticks(rotation=45)  # Menambahkan rotasi pada label x
-    col2.pyplot(plt)
-
-    # Visualisasi Monetary
-    col3.subheader('Distribution of Monetary')
-    plt.hist(rfm_data['Monetary'], bins=30, color='lightgreen', edgecolor='black')
-    plt.xlabel('Monetary (total payment value)')
-    plt.ylabel('Count')
-    plt.xticks(rotation=45)  # Menambahkan rotasi pada label x
-    col3.pyplot(plt)
 
 # menjalankan fungsi visualisasi
 st.title('Brazilian E-Commerce Public Dataset Visualization')
