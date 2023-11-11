@@ -6,14 +6,14 @@ from pathlib import Path
 
 # Baca data pelanggan, pesanan, dan pembayaran
 customer_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_customers_dataset.csv')
-geo_data = pd.read_csv('./../Datasets/olist_geolocation_dataset.csv')
-order_items_data = pd.read_csv('./../Datasets/olist_order_items_dataset.csv')
-order_payments_data = pd.read_csv('../Datasets/olist_order_payments_dataset.csv')
-order_reviews_data = pd.read_csv('../Datasets/olist_order_reviews_dataset.csv')
-orders_data = pd.read_csv('../Datasets/olist_orders_dataset.csv')
-products_data = pd.read_csv('../Datasets/olist_products_dataset.csv')
-sellers_data = pd.read_csv('../Datasets/olist_sellers_dataset.csv')
-product_category_data = pd.read_csv('../Datasets/product_category_name_translation.csv')
+geo_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_geolocation_dataset.csv')
+order_items_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_order_items_dataset.csv')
+order_payments_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_order_payments_dataset.csv')
+order_reviews_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_order_reviews_dataset.csv')
+orders_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_orders_dataset.csv')
+products_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_products_dataset.csv')
+sellers_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_sellers_dataset.csv')
+product_category_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/product_category_name_translation.csv')
 
 # Konversi kolom order_purchase_timestamp ke format datetime
 orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
