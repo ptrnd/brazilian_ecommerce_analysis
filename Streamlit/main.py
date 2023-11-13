@@ -61,9 +61,31 @@ orders_data['order_delivered_carrier_date'] = pd.to_datetime(orders_data['order_
 orders_data['order_delivered_customer_date'] = pd.to_datetime(orders_data['order_delivered_customer_date'])
 orders_data['order_estimated_delivery_date'] = pd.to_datetime(orders_data['order_estimated_delivery_date'])
 
-# ---------------------------------------------------------------------- #
-# -------------------- Visualisasi Review pelanggan -------------------- #
-# ---------------------------------------------------------------------- #
+def visualisasi_tipe_pembayaran():
+    # Convert order_purchase_timestamp to datetime
+    orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
+
+    # Count the payment types
+    counts = order_payments_data['payment_type'].value_counts()
+
+    # Ambil 3 teratas
+    top_3_counts = counts.head(3)
+
+    # Create a Streamlit app
+    st.subheader('Tipe Pembayaran Terbanyak')
+
+    # Display the counts in a pie chart
+    fig, ax = plt.subplots()
+    ax.pie(top_3_counts, labels=top_3_counts.index, autopct='%1.1f%%', startangle=90, labeldistance=1.1, pctdistance=0.75)
+    ax.axis('equal')
+    ax.set_title('Tipe Pembayaran Terbanyak (Top 3)')
+
+    # Display the pie chart using Streamlit
+    st.pyplot(fig)
+
+# ----------------------------------------------------------------------- #
+# -------------------- Visualisasi Retensi pelanggan -------------------- #
+# ----------------------------------------------------------------------- #
 
 def visualisasi_review():
     # Bagian kode yang Anda miliki
@@ -101,9 +123,6 @@ def visualisasi_review():
     plt.title('Rata-rata Review Score Over Time')
     plt.legend()
     st.pyplot(fig)
-
-    # Menampilkan rata-rata keseluruhan
-    st.write(f'Rata-rata keseluruhan: {overall_mean:.2f}')
 
 # ------------------------------------------------------------------------------- #
 # -------------------- Visualisasi Jumlah Pelanggan per Kota -------------------- #
@@ -144,7 +163,7 @@ def visualisasi_kota():
 # ------------------------------------------------------------ #
 
 def visualisasi_produk():
-    
+    st.subheader('Kategori produk yang paling banyak dibeli')
     # menghitung jumlah pembayaran produk terbanyak
     order_product = pd.merge(orders_data, order_items_data, on='order_id')
     order_product = pd.merge(order_product, order_payments_data, on='order_id')
@@ -180,7 +199,7 @@ def visualisasi_produk():
 # -------------------- Visualisasi data pelanggan -------------------- #
 # -------------------------------------------------------------------- #
 
-def visualisasi_perilaku():
+def visualisasi_retensi():
     orders_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_orders_dataset.csv')
     # Convert order_purchase_timestamp to datetime
     orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
@@ -205,10 +224,6 @@ def visualisasi_perilaku():
     }, inplace=True)
 
     # Calculate RFM Score
-    # rfm_data['Recency_Score'] = pd.qcut(rfm_data['Recency'], q=4, labels=[4, 3, 2, 1])
-    # rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, duplicates='drop')
-    # rfm_data['Monetary_Score'] = pd.qcut(rfm_data['Monetary'], q=4, labels=[1, 2, 3, 4])
-    
     rfm_data['Recency_Score'] = pd.qcut(rfm_data['Recency'], q=4, labels=[4, 3, 2, 1])
     rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, duplicates='drop')
     rfm_data['Monetary_Score'] = pd.qcut(rfm_data['Monetary'], q=4, labels=[1, 2, 3, 4])
@@ -220,39 +235,32 @@ def visualisasi_perilaku():
     st.write('RFM Data:')
     st.write(rfm_data.head())
 
-    # Create separate bar plots for Recency, Frequency, and Monetary
-    fig, axes = plt.subplots(3, 1, figsize=(10, 18))
-
+    # Create separate bar plots for Recency and Monetary
+    fig, axes = plt.subplots(2, 1, figsize=(10, 12))
+    
     # Recency Plot
     rfm_data['Recency_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[0])
     axes[0].set_title('Recency Analysis')
     axes[0].set_xlabel('Recency Score')
     axes[0].set_ylabel('Count')
-
-    # Frequency Plot
-    if '1' in rfm_data['Frequency_Score'].cat.categories and '2' in rfm_data['Frequency_Score'].cat.categories \
-            and '3' in rfm_data['Frequency_Score'].cat.categories and '4' in rfm_data['Frequency_Score'].cat.categories:
-        rfm_data['Frequency_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[1])
-        axes[1].set_title('Frequency Analysis')
-        axes[1].set_xlabel('Frequency Score')
-        axes[1].set_ylabel('Count')
-
+    
     # Monetary Plot
-    rfm_data['Monetary_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[2])
-    axes[2].set_title('Monetary Analysis')
-    axes[2].set_xlabel('Monetary Score')
-    axes[2].set_ylabel('Count')
-
+    rfm_data['Monetary_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[1])
+    axes[1].set_title('Monetary Analysis')
+    axes[1].set_xlabel('Monetary Score')
+    axes[1].set_ylabel('Count')
+    
     # Adjust layout
     plt.tight_layout()
-
+    
     # Display the plots using Streamlit
     st.pyplot(fig)
 
 
 # menjalankan fungsi visualisasi
 st.title('Brazilian E-Commerce Public Dataset Visualization')
+visualisasi_tipe_pembayaran()
 visualisasi_review()
 visualisasi_kota()
 visualisasi_produk()
-visualisasi_perilaku()
+visualisasi_retensi()
