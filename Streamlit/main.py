@@ -61,6 +61,10 @@ orders_data['order_delivered_carrier_date'] = pd.to_datetime(orders_data['order_
 orders_data['order_delivered_customer_date'] = pd.to_datetime(orders_data['order_delivered_customer_date'])
 orders_data['order_estimated_delivery_date'] = pd.to_datetime(orders_data['order_estimated_delivery_date'])
 
+# --------------------------------------------------------------------- #
+# -------------------- Visualisasi tipe pembayaran -------------------- #
+# --------------------------------------------------------------------- #
+
 def visualisasi_tipe_pembayaran():
     # Convert order_purchase_timestamp to datetime
     orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
@@ -201,14 +205,14 @@ def visualisasi_produk():
 
 def visualisasi_retensi():
     orders_data = pd.read_csv(Path(__file__).parents[1]/'Datasets/olist_orders_dataset.csv')
-    # Convert order_purchase_timestamp to datetime
+    # mengubah tipe data order_purchase_timestamp ke datetime
     orders_data['order_purchase_timestamp'] = pd.to_datetime(orders_data['order_purchase_timestamp'])
 
-    # Merge order and payment data
+    # menggabungkan data order dan order payment
     order_payment_data = order_payments_data.groupby('order_id')['payment_value'].sum().reset_index()
     orders_data = orders_data.merge(order_payment_data, on='order_id', how='left')
 
-    # Calculate Recency, Frequency, and Monetary
+    # menghitung Recency, Frequency, and Monetary
     snapshot_date = orders_data['order_purchase_timestamp'].max() + pd.DateOffset(days=1)
     rfm_data = orders_data.groupby('customer_id').agg({
         'order_purchase_timestamp': lambda x: (snapshot_date - x.max()).days,
@@ -216,20 +220,20 @@ def visualisasi_retensi():
         'payment_value': 'sum'
     }).reset_index()
 
-    # Rename columns
+    # merubah nama kolom
     rfm_data.rename(columns={
         'order_purchase_timestamp': 'Recency',
         'order_id': 'Frequency',
         'payment_value': 'Monetary'
     }, inplace=True)
 
-    # Calculate RFM Score
+    # menghitung skor RFM
     rfm_data['Recency_Score'] = pd.qcut(rfm_data['Recency'], q=4, labels=[4, 3, 2, 1])
     rfm_data['Frequency_Score'] = pd.qcut(rfm_data['Frequency'], q=4, duplicates='drop')
     rfm_data['Monetary_Score'] = pd.qcut(rfm_data['Monetary'], q=4, labels=[1, 2, 3, 4])
 
-    # Create a Streamlit app
-    st.title('RFM Analysis - E-commerce')
+    # membuat strealit chart
+    st.subheader('Visualisasi Retensi pelanggan dengan RFM')
 
     # Display the RFM data
     st.write('RFM Data:')
@@ -237,22 +241,22 @@ def visualisasi_retensi():
 
     # Create separate bar plots for Recency and Monetary
     fig, axes = plt.subplots(2, 1, figsize=(10, 12))
-    
+
     # Recency Plot
     rfm_data['Recency_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[0])
     axes[0].set_title('Recency Analysis')
     axes[0].set_xlabel('Recency Score')
     axes[0].set_ylabel('Count')
-    
+
     # Monetary Plot
     rfm_data['Monetary_Score'].value_counts().sort_index().plot(kind='bar', ax=axes[1])
     axes[1].set_title('Monetary Analysis')
     axes[1].set_xlabel('Monetary Score')
     axes[1].set_ylabel('Count')
-    
+
     # Adjust layout
     plt.tight_layout()
-    
+
     # Display the plots using Streamlit
     st.pyplot(fig)
 
